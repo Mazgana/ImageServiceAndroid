@@ -31,6 +31,7 @@
         android:layout_marginRight="16dp"
         android:layout_marginStart="16dp"
         android:hint="@string/button_send"
+        android:onClick="sendMessage"
         app:layout_constraintBaseline_toBaselineOf="@+id/editText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/editText" />
