@@ -55,7 +55,7 @@ public class ImageServiceService extends Service {
             //here you must put your computer's IP address.
             this.serverAddr = InetAddress.getByName("10.0.0.2");
             //create a socket to make the connection with the server
-            this.socket = new Socket(this.serverAddr, 1234);
+            this.socket = new Socket(this.serverAddr, 8000);
 
             final IntentFilter theFilter = new IntentFilter();
             theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
