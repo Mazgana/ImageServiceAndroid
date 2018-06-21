@@ -30,6 +30,8 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageServiceService extends Service {
     InetAddress serverAddr;
@@ -75,6 +77,7 @@ public class ImageServiceService extends Service {
                                             //create a socket to make the connection with the server
                                             Socket socket = new Socket(serverAddr, 1234);
                                             try {
+                                                startTransfer();
                                             /*
                                             for (int i = 0; i < imageList.size(); i++) {
                                                 OutputStream output = socket.getOutputStream();
@@ -116,7 +119,10 @@ public class ImageServiceService extends Service {
             return;
         }
 
-        File[] pics = dcim.listFiles();
+//        File[] pics = dcim.listFiles();
+
+        final List<File> pics = new ArrayList<File>();
+        searhSubFolders(dcim.toString(), pics);
 
         int count =0;
 
@@ -154,6 +160,20 @@ public class ImageServiceService extends Service {
         }
     }
 
+    public void searhSubFolders(String directoryName, List<File> files) {
+        File directory = new File(directoryName);
+
+        // Get all the files from a directory.
+        File[] fList = directory.listFiles();
+        for (File file : fList) {
+            if (file.isFile()) {
+                files.add(file);
+            } else if (file.isDirectory()) {
+                searhSubFolders(file.getAbsolutePath(), files);
+            }
+        }
+    }
+
     public void sendPic(File pic, byte[] imgbyte) {
            try {
                 //sends the message to the server
@@ -178,7 +198,6 @@ public class ImageServiceService extends Service {
         bitmap.compress(Bitmap.CompressFormat.PNG, 70, stream);
         return stream.toByteArray();
     }
-
 
     public void onDestroy() {
         Toast.makeText(this,"Service ending...", Toast.LENGTH_SHORT).show();
