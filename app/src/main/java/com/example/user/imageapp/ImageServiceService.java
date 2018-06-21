@@ -57,6 +57,8 @@ public class ImageServiceService extends Service {
             //create a socket to make the connection with the server
             this.socket = new Socket(this.serverAddr, 8000);
 
+            Toast.makeText(this,"TCP started...", Toast.LENGTH_SHORT).show();
+
             final IntentFilter theFilter = new IntentFilter();
             theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
             theFilter.addAction("android.net.wifi.STATE_CHANGE");
@@ -80,6 +82,7 @@ public class ImageServiceService extends Service {
             // broadcasts
             this.registerReceiver(this.yourReceiver, theFilter);
         } catch (Exception e) {
+           // Toast.makeText(this,"TCP not working...", Toast.LENGTH_SHORT).show();
             Log.e("TCP", "C: Error", e);
         }
 
