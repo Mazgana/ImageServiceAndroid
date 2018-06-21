@@ -75,7 +75,7 @@ public class ImageServiceService extends Service {
                                             //here you must put your computer's IP address.
                                             InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
                                             //create a socket to make the connection with the server
-                                            Socket socket = new Socket(serverAddr, 1234);
+                                            Socket socket = new Socket(serverAddr, 8000);
                                             try {
                                                 startTransfer();
                                             /*
@@ -114,7 +114,8 @@ public class ImageServiceService extends Service {
 
     public void startTransfer() {
         // Getting the Camera Folder
-        File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        //File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
         if (dcim == null) {
             return;
         }
@@ -127,6 +128,7 @@ public class ImageServiceService extends Service {
         int count =0;
 
         if (pics != null) {
+            /*
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
             mBuilder.setContentTitle("Picture Download")
@@ -138,6 +140,7 @@ public class ImageServiceService extends Service {
             int PROGRESS_CURRENT = 0;
             mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
             notificationManager.notify(1, mBuilder.build());
+            */
 
             for (File pic : pics) {
 	            //transfer pic
@@ -153,10 +156,12 @@ public class ImageServiceService extends Service {
 
             }
 
+            /*
             // When done, update the notification one more time to remove the progress bar
             mBuilder.setContentText("Download complete")
                     .setProgress(0,0,false);
             notificationManager.notify(1, mBuilder.build());
+            */
         }
     }
 
