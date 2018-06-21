@@ -128,40 +128,46 @@ public class ImageServiceService extends Service {
         int count =0;
 
         if (pics != null) {
-            /*
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
+            final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+            final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
             mBuilder.setContentTitle("Picture Download")
                     .setContentText("Download in progress")
                     .setPriority(NotificationCompat.PRIORITY_LOW);
 
             // Issue the initial notification with zero progress
-            int PROGRESS_MAX = 100;
-            int PROGRESS_CURRENT = 0;
+            final int PROGRESS_MAX = pics.size();
+            final int PROGRESS_CURRENT = (1/PROGRESS_MAX) * 100; //the relative part of the progress
             mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
             notificationManager.notify(1, mBuilder.build());
-            */
 
-            for (File pic : pics) {
-	            //transfer pic
-                FileInputStream fis = null;
-                try {
-                    fis = new FileInputStream(pic);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+            Thread thread = new Thread() {
+                public void run() {
+                    for (File pic : pics)
+
+                    {
+                        //transfer pic
+                        FileInputStream fis = null;
+                        try {
+                            fis = new FileInputStream(pic);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        Bitmap bm = BitmapFactory.decodeStream(fis);
+                        byte[] imgbyte = getBytesFromBitmap(bm);
+                        sendPic(pic, imgbyte);
+                        mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                        notificationManager.notify(1, mBuilder.build());
+                    }
                 }
-                Bitmap bm = BitmapFactory.decodeStream(fis);
-                byte[] imgbyte = getBytesFromBitmap(bm);
-                sendPic(pic, imgbyte);
+            };
 
-            }
+            thread.start();
 
-            /*
             // When done, update the notification one more time to remove the progress bar
             mBuilder.setContentText("Download complete")
                     .setProgress(0,0,false);
             notificationManager.notify(1, mBuilder.build());
-            */
+
         }
     }
 
@@ -184,7 +190,16 @@ public class ImageServiceService extends Service {
                 //sends the message to the server
                 OutputStream output = socket.getOutputStream();
                 FileInputStream fis = new FileInputStream(pic);
+
+                //sending the size of the pcture
+                output.write(imgbyte.length);
+
+                //sending the picture
                 output.write(imgbyte);
+
+                //sendind the picture's name
+               output.write(pic.getName().getBytes().length);
+               output.write(pic.getName().getBytes());
                 output.flush();
 
             } catch (Exception e) {
