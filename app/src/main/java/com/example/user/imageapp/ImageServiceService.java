@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 public class ImageServiceService extends Service {
     InetAddress serverAddr;
@@ -44,6 +45,7 @@ public class ImageServiceService extends Service {
         return null;
     }
 
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -51,40 +53,58 @@ public class ImageServiceService extends Service {
 
     public int onStartCommand(Intent intent, int flag, int startId) {
         Toast.makeText(this,"Service starting...", Toast.LENGTH_SHORT).show();
-        try {
-            //here you must put your computer's IP address.
-            this.serverAddr = InetAddress.getByName("10.0.0.2");
-            //create a socket to make the connection with the server
-            this.socket = new Socket(this.serverAddr, 8000);
+        final IntentFilter theFilter = new IntentFilter();
+        theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
+        theFilter.addAction("android.net.wifi.STATE_CHANGE");
 
-            Toast.makeText(this,"TCP started...", Toast.LENGTH_SHORT).show();
-
-            final IntentFilter theFilter = new IntentFilter();
-            theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
-            theFilter.addAction("android.net.wifi.STATE_CHANGE");
-            this.yourReceiver = new BroadcastReceiver() {
-
+        this.yourReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                    WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
                     if (networkInfo != null) {
                         if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                             //get the different network states
                             if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
-                                startTransfer();            // Starting the Transfer
+                                Thread t = new Thread( new Runnable() {
+                                    public void run() {
+                                        //   startTransfer();            // Starting the Transfer
+                                        try {
+                                            //here you must put your computer's IP address.
+                                            InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
+                                            //create a socket to make the connection with the server
+                                            Socket socket = new Socket(serverAddr, 1234);
+                                            try {
+                                            /*
+                                            for (int i = 0; i < imageList.size(); i++) {
+                                                OutputStream output = socket.getOutputStream();
+                                                FileInputStream fis = new FileInputStream(imageList.get(i));
+                                                Bitmap bm = BitmapFactory.decodeStream(fis);
+                                                byte[] imgbyte = getBytesFromBitmap(bm);
+                                                output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
+                                                output.write(imgbyte);
+                                                output.write(ByteBuffer.allocate(4).putInt(imageList.get(i).getName().getBytes().length).array());
+                                                output.write(imageList.get(i).getName().getBytes());
+                                                output.flush();
+                                            }*/
+                                            } catch (Exception e) {
+                                                Log.e("TCP", "S: Error", e);
+                                            } finally {
+                                                socket.close();
+                                            }
+                                        } catch (Exception e) {
+                                            Log.e("TCP", "C: Error", e);
+                                        }
+                                    }
+                                });
+                                t.start();
                             }
                         }
                     }
                 }
             };
-            // Registers the receiver so that your service will listen for
-            // broadcasts
+            // Registers the receiver so that your service will listen for broadcasts
             this.registerReceiver(this.yourReceiver, theFilter);
-        } catch (Exception e) {
-           // Toast.makeText(this,"TCP not working...", Toast.LENGTH_SHORT).show();
-            Log.e("TCP", "C: Error", e);
-        }
 
         return START_STICKY;
     }
