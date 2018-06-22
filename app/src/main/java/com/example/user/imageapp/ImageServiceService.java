@@ -59,11 +59,15 @@ public class ImageServiceService extends Service {
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
         theFilter.addAction("android.net.wifi.STATE_CHANGE");
 
+        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
+
         this.yourReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+
                     if (networkInfo != null) {
                         if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                             //get the different network states
@@ -84,6 +88,15 @@ public class ImageServiceService extends Service {
 
                                                 final List<File> pics = new ArrayList<File>();
                                                 searhSubFolders(dcim.toString(), pics);
+
+
+                                                mBuilder.setContentTitle("Picture Download")
+                                                        .setContentText("Download in progress")
+                                                        .setPriority(NotificationCompat.PRIORITY_LOW);
+
+                                                // Issue the initial notification with zero progress
+                                                final int PROGRESS_MAX = pics.size();
+                                                final int PROGRESS_CURRENT = (1/PROGRESS_MAX) * 100; //the relative part of the progress
                                               //  startTransfer();
 
                                                 for (int i = 0; i < pics.size(); i++) {
@@ -96,7 +109,16 @@ public class ImageServiceService extends Service {
                                                     output.write(ByteBuffer.allocate(4).putInt(pics.get(i).getName().getBytes().length).array());
                                                     output.write(pics.get(i).getName().getBytes());
                                                     output.flush();
-                                            }
+
+                                                    mBuilder.setProgress(100, PROGRESS_CURRENT, false);
+                                                    notificationManager.notify(1, mBuilder.build());
+                                                 }
+
+                                                // When done, update the notification one more time to remove the progress bar
+                                                mBuilder.setContentText("Download complete")
+                                                        .setProgress(0,0,false);
+                                                notificationManager.notify(1, mBuilder.build());
+
                                             } catch (Exception e) {
                                                 Log.e("TCP", "S: Error", e);
                                             } finally {
