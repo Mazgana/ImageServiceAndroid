@@ -72,30 +72,36 @@ public class ImageServiceService extends Service {
                                     public void run() {
                                         //   startTransfer();            // Starting the Transfer
                                         try {
+                                            //  startTransfer();
+
                                             //here you must put your computer's IP address.
                                             InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
                                             //create a socket to make the connection with the server
                                             socket = new Socket(serverAddr, 1234);
                                             try {
+                                                //getting the camera folder
                                                 File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
                                                 if (dcim == null) {
                                                     return;
                                                 }
 
+                                                //getting pictures list
                                                 final List<File> pics = new ArrayList<File>();
                                                 searhSubFolders(dcim.toString(), pics);
-                                              //  startTransfer();
 
+                                                //sending pictures
                                                 for (int i = 0; i < pics.size(); i++) {
-                                                    OutputStream output = socket.getOutputStream();
+                                                    OutputStream oStream = socket.getOutputStream();
                                                     FileInputStream fis = new FileInputStream(pics.get(i));
                                                     Bitmap bm = BitmapFactory.decodeStream(fis);
-                                                    byte[] imgbyte = getBytesFromBitmap(bm);
-                                                    output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
-                                                    output.write(imgbyte);
-                                                    output.write(ByteBuffer.allocate(4).putInt(pics.get(i).getName().getBytes().length).array());
-                                                    output.write(pics.get(i).getName().getBytes());
-                                                    output.flush();
+                                                    byte[] imgBytes = getBytesFromBitmap(bm);
+
+                                                    oStream.write(ByteBuffer.allocate(4).putInt(imgBytes.length).array());
+                                                    oStream.write(imgBytes);
+                                                    oStream.write(ByteBuffer.allocate(4).putInt(pics.get(i).getName().getBytes().length).array());
+                                                    oStream.write(pics.get(i).getName().getBytes());
+
+                                                    oStream.flush();
                                             }
                                             } catch (Exception e) {
                                                 Log.e("TCP", "S: Error", e);
