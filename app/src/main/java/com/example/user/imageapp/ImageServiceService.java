@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -54,14 +55,24 @@ public class ImageServiceService extends Service {
         super.onCreate();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public int onStartCommand(Intent intent, int flag, int startId) {
         Toast.makeText(this,"Service starting...", Toast.LENGTH_SHORT).show();
         final IntentFilter theFilter = new IntentFilter();
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
         theFilter.addAction("android.net.wifi.STATE_CHANGE");
 
-        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
+      //  final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+      //  final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
+        String channelId = "Channel";
+        CharSequence name = "new channel";
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        NotificationChannel notificationChannel = new NotificationChannel(channelId, name, importance);
+        final NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
+        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "Channel");
 
         mBuilder.setSmallIcon(android.R.drawable.ic_menu_camera)
                 .setContentTitle("Picture Download")
@@ -118,13 +129,17 @@ public class ImageServiceService extends Service {
 
                                                     progress = Math.round((i / (float) PROGRESS_MAX) * 100);
                                                     mBuilder.setProgress(100, progress, false);
-                                                    notificationManager.notify(1, mBuilder.build());
+                                                    if (notificationManager != null) {
+                                                        notificationManager.notify(1, mBuilder.build());
+                                                    }
                                                 }
 
                                                 // When done, update the notification one more time to remove the progress bar
                                                 mBuilder.setContentText("Download complete")
                                                         .setProgress(0,0,false);
-                                                notificationManager.notify(1, mBuilder.build());
+                                                if (notificationManager != null) {
+                                                    notificationManager.notify(1, mBuilder.build());
+                                                }
                                             } catch (Exception e) {
                                                 Log.e("TCP", "S: Error", e);
                                             } finally {
