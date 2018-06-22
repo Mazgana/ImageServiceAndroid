@@ -59,15 +59,11 @@ public class ImageServiceService extends Service {
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
         theFilter.addAction("android.net.wifi.STATE_CHANGE");
 
-        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
-
         this.yourReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-
                     if (networkInfo != null) {
                         if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                             //get the different network states
@@ -76,49 +72,37 @@ public class ImageServiceService extends Service {
                                     public void run() {
                                         //   startTransfer();            // Starting the Transfer
                                         try {
+                                            //  startTransfer();
+
                                             //here you must put your computer's IP address.
                                             InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
                                             //create a socket to make the connection with the server
                                             socket = new Socket(serverAddr, 1234);
                                             try {
+                                                //getting the camera folder
                                                 File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
                                                 if (dcim == null) {
                                                     return;
                                                 }
 
+                                                //getting pictures list
                                                 final List<File> pics = new ArrayList<File>();
                                                 searhSubFolders(dcim.toString(), pics);
 
-
-                                                mBuilder.setContentTitle("Picture Download")
-                                                        .setContentText("Download in progress")
-                                                        .setPriority(NotificationCompat.PRIORITY_LOW);
-
-                                                // Issue the initial notification with zero progress
-                                                final int PROGRESS_MAX = pics.size();
-                                                final int PROGRESS_CURRENT = (1/PROGRESS_MAX) * 100; //the relative part of the progress
-                                              //  startTransfer();
-
+                                                //sending pictures
                                                 for (int i = 0; i < pics.size(); i++) {
-                                                    OutputStream output = socket.getOutputStream();
+                                                    OutputStream oStream = socket.getOutputStream();
                                                     FileInputStream fis = new FileInputStream(pics.get(i));
                                                     Bitmap bm = BitmapFactory.decodeStream(fis);
-                                                    byte[] imgbyte = getBytesFromBitmap(bm);
-                                                    output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
-                                                    output.write(imgbyte);
-                                                    output.write(ByteBuffer.allocate(4).putInt(pics.get(i).getName().getBytes().length).array());
-                                                    output.write(pics.get(i).getName().getBytes());
-                                                    output.flush();
+                                                    byte[] imgBytes = getBytesFromBitmap(bm);
 
-                                                    mBuilder.setProgress(100, PROGRESS_CURRENT, false);
-                                                    notificationManager.notify(1, mBuilder.build());
-                                                 }
+                                                    oStream.write(ByteBuffer.allocate(4).putInt(imgBytes.length).array());
+                                                    oStream.write(imgBytes);
+                                                    oStream.write(ByteBuffer.allocate(4).putInt(pics.get(i).getName().getBytes().length).array());
+                                                    oStream.write(pics.get(i).getName().getBytes());
 
-                                                // When done, update the notification one more time to remove the progress bar
-                                                mBuilder.setContentText("Download complete")
-                                                        .setProgress(0,0,false);
-                                                notificationManager.notify(1, mBuilder.build());
-
+                                                    oStream.flush();
+                                            }
                                             } catch (Exception e) {
                                                 Log.e("TCP", "S: Error", e);
                                             } finally {
