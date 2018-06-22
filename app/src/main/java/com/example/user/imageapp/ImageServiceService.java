@@ -87,7 +87,9 @@ public class ImageServiceService extends Service {
 
                                  // Issue the initial notification with zero progress
                                  final int PROGRESS_MAX = pics.size();
-                                 final int PROGRESS_CURRENT = Math.round(100 / PROGRESS_MAX); //the relative part of the progress
+                                 //final int PROGRESS_CURRENT = Math.round(100 / PROGRESS_MAX); //the relative part of the progress
+
+                                int progress_current = 0;
 
                                   //sending pictures
                                   for (int i = 0; i < pics.size(); i++) {
@@ -103,7 +105,9 @@ public class ImageServiceService extends Service {
 
                                         oStream.flush();
 
-                                        mBuilder.setProgress(100, PROGRESS_CURRENT, false);
+                                        progress_current = (i / PROGRESS_MAX) * 100;
+
+                                        mBuilder.setProgress(100, progress_current, false);
                                         notificationManager.notify(1, mBuilder.build());
                                   }
 
