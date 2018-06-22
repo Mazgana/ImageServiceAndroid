@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ImageServiceService extends Service {
-    InetAddress serverAddr;
     Socket socket;
     BroadcastReceiver yourReceiver;
 
@@ -64,24 +63,38 @@ public class ImageServiceService extends Service {
 
       //  final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
       //  final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
-        String channelId = "Channel";
-        CharSequence name = "new channel";
-        int importance = NotificationManager.IMPORTANCE_DEFAULT;
-        NotificationChannel notificationChannel = new NotificationChannel(channelId, name, importance);
-        final NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.createNotificationChannel(notificationChannel);
-        }
-        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "Channel");
+     //   String channelId = "Channel";
+      //  CharSequence name = "new channel";
+      //  int importance = NotificationManager.IMPORTANCE_DEFAULT;
+      //  NotificationChannel notificationChannel = new NotificationChannel(channelId, name, importance);
+      //  final NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+      //  if (notificationManager != null) {
+       //     notificationManager.createNotificationChannel(notificationChannel);
+        //}
+        //final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "Channel");
 
-        mBuilder.setSmallIcon(android.R.drawable.ic_menu_camera)
-                .setContentTitle("Picture Download")
-                .setContentText("Download in progress")
-                .setPriority(NotificationCompat.PRIORITY_LOW);
+        //mBuilder.setSmallIcon(android.R.drawable.ic_menu_camera)
+         //       .setContentTitle("Picture Download")
+          //      .setContentText("Download in progress")
+          //      .setPriority(NotificationCompat.PRIORITY_LOW);
 
         this.yourReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
+                    String channelId = "Channel";
+                    CharSequence name = "new channel";
+                    int importance = NotificationManager.IMPORTANCE_DEFAULT;
+                    NotificationChannel notificationChannel = new NotificationChannel(channelId, name, importance);
+                    final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    if (notificationManager != null) {
+                        notificationManager.createNotificationChannel(notificationChannel);
+                    }
+                    final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, "Channel");
+
+                    mBuilder.setSmallIcon(R.drawable.ic_launcher_background)
+                            .setContentTitle("Transform pictures")
+                            .setContentText("transforming");
+
                     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
                     if (networkInfo != null) {
@@ -104,14 +117,14 @@ public class ImageServiceService extends Service {
                                                 }
 
                                                 //getting pictures list
-                                                final List<File> pics = new ArrayList<File>();
+                                                final List<File> pics = new ArrayList<>();
                                                 searhSubFolders(dcim.toString(), pics);
 
                                                 // Issue the initial notification with zero progress
                                                 final int PROGRESS_MAX = pics.size();
                                                // final int PROGRESS_CURRENT = Math.round(100 / PROGRESS_MAX); //the relative part of the progress
 
-                                                int progress = 0;
+                                                int progress;
 
                                                 //sending pictures
                                                 for (int i = 0; i < pics.size(); i++) {
@@ -162,64 +175,6 @@ public class ImageServiceService extends Service {
         return START_STICKY;
     }
 
-    public void startTransfer() {
-        // Getting the Camera Folder
-        //File dcim = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
-        if (dcim == null) {
-            return;
-        }
-
-//        File[] pics = dcim.listFiles();
-
-        final List<File> pics = new ArrayList<File>();
-        searhSubFolders(dcim.toString(), pics);
-
-   //     int count =0;
-
-        if (pics != null) {
-            final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-            final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
-            mBuilder.setContentTitle("Picture Download")
-                    .setContentText("Download in progress")
-                    .setPriority(NotificationCompat.PRIORITY_LOW);
-
-            // Issue the initial notification with zero progress
-            final int PROGRESS_MAX = pics.size();
-            final int PROGRESS_CURRENT = (1/PROGRESS_MAX) * 100; //the relative part of the progress
-//            mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
-//            notificationManager.notify(1, mBuilder.build());
-
-            Thread thread = new Thread() {
-                public void run() {
-                    for (File pic : pics)
-
-                    {
-                        //transfer pic
-                        FileInputStream fis = null;
-                        try {
-                            fis = new FileInputStream(pic);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
-
-                        sendPic(pic);
-                        mBuilder.setProgress(100, PROGRESS_CURRENT, false);
-                        notificationManager.notify(1, mBuilder.build());
-                    }
-                }
-            };
-
-            thread.start();
-
-            // When done, update the notification one more time to remove the progress bar
-            mBuilder.setContentText("Download complete")
-                    .setProgress(0,0,false);
-            notificationManager.notify(1, mBuilder.build());
-
-        }
-    }
-
     public void searhSubFolders(String directoryName, List<File> files) {
         File directory = new File(directoryName);
 
@@ -232,41 +187,6 @@ public class ImageServiceService extends Service {
                 searhSubFolders(file.getAbsolutePath(), files);
             }
         }
-    }
-
-    public void sendPic(File pic) {
-           try {
-                //sends the message to the server
-                OutputStream output = socket.getOutputStream();
-                FileInputStream fis = new FileInputStream(pic);
-
-               Bitmap bm = BitmapFactory.decodeStream(fis);
-               byte[] imgbyte = getBytesFromBitmap(bm);
-
-                //sending the size of the picture
-                output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
-               output.flush();
-
-                //sending the picture
-                output.write(imgbyte);
-               output.flush();
-
-                //sendind the picture's name
-               output.write(ByteBuffer.allocate(4).putInt(pic.getName().getBytes().length).array());
-               output.flush();
-
-               output.write(pic.getName().getBytes());
-               output.flush();
-
-            } catch (Exception e) {
-                Log.e("TCP", "S: Error", e);
-            } finally {
-               try {
-                   this.socket.close();
-               } catch (IOException e) {
-                   e.printStackTrace();
-               }
-           }
     }
 
     public byte[] getBytesFromBitmap(Bitmap bitmap) {
