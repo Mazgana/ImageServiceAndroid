@@ -75,7 +75,7 @@ public class ImageServiceService extends Service {
                                             //here you must put your computer's IP address.
                                             InetAddress serverAddr = InetAddress.getByName("10.0.2.2");
                                             //create a socket to make the connection with the server
-                                            Socket socket = new Socket(serverAddr, 8000);
+                                            socket = new Socket(serverAddr, 1234);
                                             try {
                                                 startTransfer();
                                             /*
