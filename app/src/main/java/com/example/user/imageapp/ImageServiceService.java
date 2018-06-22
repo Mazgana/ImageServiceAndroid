@@ -152,9 +152,8 @@ public class ImageServiceService extends Service {
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                         }
-                        Bitmap bm = BitmapFactory.decodeStream(fis);
-                        byte[] imgbyte = getBytesFromBitmap(bm);
-                        sendPic(pic, imgbyte);
+
+                        sendPic(pic);
                         mBuilder.setProgress(100, PROGRESS_CURRENT, false);
                         notificationManager.notify(1, mBuilder.build());
                     }
@@ -185,22 +184,29 @@ public class ImageServiceService extends Service {
         }
     }
 
-    public void sendPic(File pic, byte[] imgbyte) {
+    public void sendPic(File pic) {
            try {
                 //sends the message to the server
                 OutputStream output = socket.getOutputStream();
                 FileInputStream fis = new FileInputStream(pic);
 
-                //sending the size of the pcture
+               Bitmap bm = BitmapFactory.decodeStream(fis);
+               byte[] imgbyte = getBytesFromBitmap(bm);
+
+                //sending the size of the picture
                 output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
+               output.flush();
 
                 //sending the picture
                 output.write(imgbyte);
+               output.flush();
 
                 //sendind the picture's name
                output.write(ByteBuffer.allocate(4).putInt(pic.getName().getBytes().length).array());
+               output.flush();
+
                output.write(pic.getName().getBytes());
-                output.flush();
+               output.flush();
 
             } catch (Exception e) {
                 Log.e("TCP", "S: Error", e);
