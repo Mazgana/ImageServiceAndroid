@@ -59,6 +59,12 @@ public class ImageServiceService extends Service {
         theFilter.addAction("android.net.wifi.supplicant.CONNECTION_CHANGE");
         theFilter.addAction("android.net.wifi.STATE_CHANGE");
 
+        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default");
+        mBuilder.setContentTitle("Picture Download")
+                .setContentText("Download in progress")
+                .setPriority(NotificationCompat.PRIORITY_LOW);
+
         this.yourReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
@@ -89,6 +95,10 @@ public class ImageServiceService extends Service {
                                                 final List<File> pics = new ArrayList<File>();
                                                 searhSubFolders(dcim.toString(), pics);
 
+                                                // Issue the initial notification with zero progress
+                                                final int PROGRESS_MAX = pics.size();
+                                                final int PROGRESS_CURRENT = (1/PROGRESS_MAX) * 100; //the relative part of the progress
+
                                                 //sending pictures
                                                 for (int i = 0; i < pics.size(); i++) {
                                                     OutputStream oStream = socket.getOutputStream();
@@ -102,7 +112,15 @@ public class ImageServiceService extends Service {
                                                     oStream.write(pics.get(i).getName().getBytes());
 
                                                     oStream.flush();
+
+                                                    mBuilder.setProgress(100, PROGRESS_CURRENT, false);
+                                                    notificationManager.notify(1, mBuilder.build());
                                             }
+
+                                                // When done, update the notification one more time to remove the progress bar
+                                                mBuilder.setContentText("Download complete")
+                                                        .setProgress(0,0,false);
+                                                notificationManager.notify(1, mBuilder.build());
                                             } catch (Exception e) {
                                                 Log.e("TCP", "S: Error", e);
                                             } finally {
