@@ -125,7 +125,7 @@ public class ImageServiceService extends Service {
         final List<File> pics = new ArrayList<File>();
         searhSubFolders(dcim.toString(), pics);
 
-        int count =0;
+   //     int count =0;
 
         if (pics != null) {
             final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
@@ -137,8 +137,8 @@ public class ImageServiceService extends Service {
             // Issue the initial notification with zero progress
             final int PROGRESS_MAX = pics.size();
             final int PROGRESS_CURRENT = (1/PROGRESS_MAX) * 100; //the relative part of the progress
-            mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
-            notificationManager.notify(1, mBuilder.build());
+//            mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+//            notificationManager.notify(1, mBuilder.build());
 
             Thread thread = new Thread() {
                 public void run() {
