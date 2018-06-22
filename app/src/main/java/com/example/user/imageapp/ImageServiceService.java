@@ -155,7 +155,7 @@ public class ImageServiceService extends Service {
                         Bitmap bm = BitmapFactory.decodeStream(fis);
                         byte[] imgbyte = getBytesFromBitmap(bm);
                         sendPic(pic, imgbyte);
-                        mBuilder.setProgress(PROGRESS_MAX, PROGRESS_CURRENT, false);
+                        mBuilder.setProgress(100, PROGRESS_CURRENT, false);
                         notificationManager.notify(1, mBuilder.build());
                     }
                 }
@@ -192,13 +192,13 @@ public class ImageServiceService extends Service {
                 FileInputStream fis = new FileInputStream(pic);
 
                 //sending the size of the pcture
-                output.write(imgbyte.length);
+                output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
 
                 //sending the picture
                 output.write(imgbyte);
 
                 //sendind the picture's name
-               output.write(pic.getName().getBytes().length);
+               output.write(ByteBuffer.allocate(4).putInt(pic.getName().getBytes().length).array());
                output.write(pic.getName().getBytes());
                 output.flush();
 
