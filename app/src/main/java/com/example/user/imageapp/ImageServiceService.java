@@ -77,19 +77,26 @@ public class ImageServiceService extends Service {
                                             //create a socket to make the connection with the server
                                             socket = new Socket(serverAddr, 1234);
                                             try {
-                                                startTransfer();
-                                            /*
-                                            for (int i = 0; i < imageList.size(); i++) {
-                                                OutputStream output = socket.getOutputStream();
-                                                FileInputStream fis = new FileInputStream(imageList.get(i));
-                                                Bitmap bm = BitmapFactory.decodeStream(fis);
-                                                byte[] imgbyte = getBytesFromBitmap(bm);
-                                                output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
-                                                output.write(imgbyte);
-                                                output.write(ByteBuffer.allocate(4).putInt(imageList.get(i).getName().getBytes().length).array());
-                                                output.write(imageList.get(i).getName().getBytes());
-                                                output.flush();
-                                            }*/
+                                                File dcim = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
+                                                if (dcim == null) {
+                                                    return;
+                                                }
+
+                                                final List<File> pics = new ArrayList<File>();
+                                                searhSubFolders(dcim.toString(), pics);
+                                              //  startTransfer();
+
+                                                for (int i = 0; i < pics.size(); i++) {
+                                                    OutputStream output = socket.getOutputStream();
+                                                    FileInputStream fis = new FileInputStream(pics.get(i));
+                                                    Bitmap bm = BitmapFactory.decodeStream(fis);
+                                                    byte[] imgbyte = getBytesFromBitmap(bm);
+                                                    output.write(ByteBuffer.allocate(4).putInt(imgbyte.length).array());
+                                                    output.write(imgbyte);
+                                                    output.write(ByteBuffer.allocate(4).putInt(pics.get(i).getName().getBytes().length).array());
+                                                    output.write(pics.get(i).getName().getBytes());
+                                                    output.flush();
+                                            }
                                             } catch (Exception e) {
                                                 Log.e("TCP", "S: Error", e);
                                             } finally {
