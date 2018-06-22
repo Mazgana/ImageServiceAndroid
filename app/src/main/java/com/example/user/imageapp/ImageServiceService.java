@@ -15,6 +15,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
+import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -97,7 +98,7 @@ public class ImageServiceService extends Service {
 
                                                 // Issue the initial notification with zero progress
                                                 final int PROGRESS_MAX = pics.size();
-                                                final int PROGRESS_CURRENT = (1/PROGRESS_MAX) * 100; //the relative part of the progress
+                                                final int PROGRESS_CURRENT = Math.round(100 / PROGRESS_MAX); //the relative part of the progress
 
                                                 //sending pictures
                                                 for (int i = 0; i < pics.size(); i++) {
